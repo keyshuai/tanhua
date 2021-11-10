@@ -27,7 +27,11 @@ public class UserInfoService {
 
     //保存
     public void save(UserInfo userInfo){
-        userInfoApi.save(userInfo);
+        UserInfo byId = userInfoApi.findById(userInfo.getId());
+        if (byId==null){
+            userInfoApi.save(userInfo);
+        }
+          userInfoApi.update(userInfo);
     }
 
     //更新用户头像
@@ -45,7 +49,6 @@ public class UserInfoService {
             userInfoApi.update(userInfo);
         }
     }
-
 
     public UserInfoVo findById(Long userID) {
         UserInfo userInfo = userInfoApi.findById(userID);

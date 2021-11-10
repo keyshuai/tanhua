@@ -4,6 +4,8 @@ import com.tanhua.autoconfig.template.SmsTemplate;
 import com.tanhua.commons.utils.JwtUtils;
 import com.tanhua.dubbo.api.UserApi;
 import com.tanhua.model.domain.User;
+import com.tanhua.model.vo.ErrorResult;
+import com.tanhua.server.exception.BusinessException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +45,7 @@ public class UserService {
         String redisCode = redisTemplate.opsForValue().get("CHECK_CODE_" + phone);
         if (StringUtils.isEmpty(redisCode) || !redisCode.equals(code)){
             //验证码无效
-            throw new RuntimeException();
+            throw new BusinessException(ErrorResult.loginError());
         }
         redisTemplate.delete("CHECK_CODE_"+phone);
         User user = userApi.findByMobile(phone);

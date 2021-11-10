@@ -4,7 +4,9 @@ import com.tanhua.autoconfig.template.AipFaceTemplate;
 import com.tanhua.autoconfig.template.OssTemplate;
 import com.tanhua.dubbo.api.UserInfoApi;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.vo.ErrorResult;
 import com.tanhua.model.vo.UserInfoVo;
+import com.tanhua.server.exception.BusinessException;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.BindException;
 
 @Service
 public class UserInfoService {
@@ -41,7 +44,7 @@ public class UserInfoService {
         boolean detect = aipFaceTemplate.detect(imageUrl);
 
         if (!detect){
-            throw new RuntimeException("");
+            throw new BusinessException(ErrorResult.faceError());
         }else {
             UserInfo userInfo = new UserInfo();
             userInfo.setId(Long.valueOf(id));
@@ -49,7 +52,7 @@ public class UserInfoService {
             userInfoApi.update(userInfo);
         }
     }
-
+    //根据id查询
     public UserInfoVo findById(Long userID) {
         UserInfo userInfo = userInfoApi.findById(userID);
 
@@ -59,5 +62,9 @@ public class UserInfoService {
             vo.setAge(userInfo.getAge().toString());
         }
         return vo;
+    }
+    //更新
+    public void update(UserInfo userInfo) {
+        userInfoApi.update(userInfo);
     }
 }

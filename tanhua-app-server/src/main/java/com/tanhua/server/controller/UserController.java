@@ -2,6 +2,7 @@ package com.tanhua.server.controller;
 
 import com.tanhua.commons.utils.JwtUtils;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.server.interceptor.UserHolder;
 import com.tanhua.server.service.UserInfoService;
 import com.tanhua.server.service.UserService;
 import io.jsonwebtoken.Claims;
@@ -21,15 +22,9 @@ public class UserController {
 
     @PostMapping("/loginReginfo")
     public ResponseEntity loginReginfo(@RequestBody UserInfo userInfo,@RequestHeader("Authorization")String token){
-        boolean verifyToken = JwtUtils.verifyToken(token);
-        if (!verifyToken){
-            return ResponseEntity.status(401).body(null);
-        }
 
 
-        Claims claims = JwtUtils.getClaims(token);
-        Integer id = (Integer) claims.get("id");
-        userInfo.setId(Long.valueOf(id));
+        userInfo.setId(UserHolder.getUserId());
         userInfoService.save(userInfo);
         return ResponseEntity.ok(null);
     }
@@ -37,16 +32,10 @@ public class UserController {
 
 
 
-    @PutMapping("loginReginfo/head")
+    @PostMapping("/loginReginfo/head")
     public ResponseEntity updatuserInfo(MultipartFile headPhoto, @RequestHeader("Authorization")String token) throws IOException {
-        boolean verifyToken = JwtUtils.verifyToken(token);
-        if (!verifyToken){
-            return ResponseEntity.status(401).body(null);
-        }
 
-        Claims claims = JwtUtils.getClaims(token);
-        Long id= (Long) claims.get("id");
-        userInfoService.updateHead(headPhoto,id);
+        userInfoService.updateHead(headPhoto,UserHolder.getUserId());
         return  ResponseEntity.ok("修改完成");
     }
 

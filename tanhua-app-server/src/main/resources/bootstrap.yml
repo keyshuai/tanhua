@@ -1,0 +1,29 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: tanhua-app-server
+  profiles:
+    active: prod
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.136.160:8848
+      config:
+        server-addr: 192.168.136.160:8848
+        file-extension: yml
+
+#tanhua:
+#  sms:
+#    signName: 物流云商
+#    templateCode: SMS_106590012
+#    accessKey: LTAI4GKgob9vZ53k2SZdyAC7
+#    secret: LHLBvXmILRoyw0niRSBuXBZewQ30la
+#
+#  oss:
+#    accessKey:
+#    secret:
+#    endpoint: oss-cn-beijing.aliyuncs.com
+#    bucketName: tanhua-shuai
+#    url: https://tanhua-shuai.oss-cn-beijing.aliyuncs.com/

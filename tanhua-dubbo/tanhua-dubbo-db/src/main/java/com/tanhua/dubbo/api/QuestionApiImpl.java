@@ -22,11 +22,11 @@ public class QuestionApiImpl implements QuestionApi{
 
     @Override
     public void save(Question question) {
-
+        questionMapper.insert(question);
     }
 
     @Override
     public void update(Question question) {
-
+        questionMapper.updateById(question);
     }
 }

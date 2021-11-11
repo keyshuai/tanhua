@@ -40,4 +40,20 @@ public class SettingsService {
         }
         return vo;
     }
+
+    public void saveQuestion(String content) {
+        //获取当前用户id
+        Long userId = UserHolder.getUserId();
+        Question question = questionApi.findByUserId(userId);
+        if (question==null){
+            question = new Question();
+            question.setUserId(userId);
+            question.setTxt(content);
+            questionApi.save(question);
+        }else {
+            question.setTxt(content);
+            questionApi.update(question);
+        }
+
+    }
 }

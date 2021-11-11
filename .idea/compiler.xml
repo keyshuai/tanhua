@@ -19,7 +19,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="tanhua" options="-parameters" />
+      <module name="tanhua" options="" />
       <module name="tanhua-app-server" options="-parameters" />
       <module name="tanhua-autoconfig" options="-parameters" />
       <module name="tanhua-commons" options="-parameters" />

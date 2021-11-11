@@ -23,11 +23,12 @@ public class SettingServiceImpl implements SettingsApi{
 
     @Override
     public void save(Settings settings) {
-
+        settingsMapper.insert(settings);
     }
 
     @Override
     public void update(Settings settings) {
+        settingsMapper.updateById(settings);
 
     }
 }

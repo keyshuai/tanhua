@@ -15,11 +15,12 @@ public class DubboDBApplication {
     public static void main(String[] args) {
         SpringApplication.run(DubboDBApplication.class,args);
     }
-
+    //mybatis-plus 分页插件支持
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
     }
+
 }

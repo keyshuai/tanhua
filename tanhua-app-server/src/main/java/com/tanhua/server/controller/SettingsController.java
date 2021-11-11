@@ -1,5 +1,6 @@
 package com.tanhua.server.controller;
 
+import com.tanhua.model.vo.PageResult;
 import com.tanhua.model.vo.SettingsVo;
 import com.tanhua.server.service.SettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class SettingsController {
+
     @Autowired
     private SettingsService settingsService;
 
@@ -25,5 +27,22 @@ public class SettingsController {
         String content = (String) map.get("content");
         settingsService.saveQuestion(content);
         return ResponseEntity.ok(null);
+    }
+    @PostMapping("/notifications/setting")
+    public ResponseEntity notifications(@RequestBody Map map){
+        settingsService.saveSettings(map);
+        return ResponseEntity.ok(null);
+    }
+    //分页查询黑名单
+    @GetMapping("/blacklist")
+    public ResponseEntity blacklist(@RequestParam(defaultValue = "1")int page,@RequestParam(defaultValue = "10")int size){
+        PageResult pr=settingsService.blacklist(page,size);
+        return ResponseEntity.ok(pr);
+    }
+    //取消黑名单
+    @DeleteMapping("/blacklist/{uid}")
+    public ResponseEntity deleteBlackList(@PathVariable("uid")Long blackUserId){
+        settingsService.deleteBlackList(blackUserId);
+        return ResponseEntity.ok("取消黑名单成功");
     }
 }

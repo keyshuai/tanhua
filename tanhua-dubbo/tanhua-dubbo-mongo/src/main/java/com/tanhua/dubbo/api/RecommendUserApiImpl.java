@@ -18,7 +18,8 @@ public class RecommendUserApiImpl implements RecommendUserApi{
 
     @Override
     public RecommendUser queryWithMaxScore(Long toUserId) {
-        Criteria criteria = Criteria.where("toUserId");
+        //查询今日佳人 where 查询此id
+        Criteria criteria = Criteria.where("toUserId").is(toUserId);
         //构建Criteria
         Query query = Query.query(criteria).with(Sort.by(Sort.Order.desc("score"))).limit(1);
         //调用mongoTemplate查询

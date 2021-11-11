@@ -16,10 +16,10 @@ public class TanhuaService {
     private RecommendUserApi recommendUserApi;
     @DubboReference
     private UserInfoApi userInfoApi;
-    @DubboReference
-    private HuanXinTemplate huanXinTemplate;
 
+    //查询今日佳人的数据
     public TodayBest todayBest() {
+        //
         Long userId = UserHolder.getUserId();
         //2、调用API查询
         RecommendUser recommendUser = recommendUserApi.queryWithMaxScore(userId);

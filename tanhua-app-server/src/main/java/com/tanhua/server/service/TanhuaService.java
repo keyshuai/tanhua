@@ -41,7 +41,7 @@ public class TanhuaService {
         TodayBest vo = TodayBest.init(userInfo, recommendUser);
         return vo;
     }
-
+    //推荐好友列表
     public PageResult recommendation(RecommendUserDto dto) {
         Long userId = UserHolder.getUserId();
         //分页查询数据列表

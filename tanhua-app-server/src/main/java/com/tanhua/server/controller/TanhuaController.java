@@ -21,9 +21,10 @@ public class TanhuaController {
         TodayBest vo=tanhuaService.todayBest();
         return ResponseEntity.ok(vo);
     }
+    //查询分页推荐好友列表
     @GetMapping("/recommendation")
     public ResponseEntity personalInfo(RecommendUserDto dto){
-        PageResult pr=tanhuaService.recommendation(dto);
-        return ResponseEntity.ok("");
+        PageResult result=tanhuaService.recommendation(dto);
+        return ResponseEntity.ok(result);
     }
 }

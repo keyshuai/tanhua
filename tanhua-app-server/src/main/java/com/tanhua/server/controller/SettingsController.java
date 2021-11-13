@@ -15,7 +15,7 @@ public class SettingsController {
 
     @Autowired
     private SettingsService settingsService;
-
+    //查询通用设置
     @GetMapping("/settings")
     public ResponseEntity settings(){
         SettingsVo vo = settingsService.settings();
@@ -28,6 +28,7 @@ public class SettingsController {
         settingsService.saveQuestion(content);
         return ResponseEntity.ok(null);
     }
+
     @PostMapping("/notifications/setting")
     public ResponseEntity notifications(@RequestBody Map map){
         settingsService.saveSettings(map);

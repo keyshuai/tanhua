@@ -12,14 +12,14 @@ import java.util.Map;
 public class LoginController {
     @Autowired
     private UserService userService;
-
+    //发送验证码
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody Map map){
         String phone = (String) map.get("phone");
         userService.sendMsg(phone);
         return ResponseEntity.ok("成功");
     }
-
+    //验证验证码
     @PostMapping("loginVerification")
     public ResponseEntity loginVerification(@RequestBody Map map){
         //1、调用map集合获取请求参数

@@ -23,6 +23,7 @@ public class MovementsController {
         return ResponseEntity.ok(null);
 
     }
+    //查询动态
     @GetMapping("/all")
     public ResponseEntity findByUserId(Long userId,
                                        @RequestParam(defaultValue = "1") Integer page,

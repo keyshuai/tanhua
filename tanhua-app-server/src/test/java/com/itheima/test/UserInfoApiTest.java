@@ -30,8 +30,9 @@ public class UserInfoApiTest {
         ids.add(2L);
         ids.add(3L);
         ids.add(4L);
+        ids.add(5L);
         UserInfo userInfo = new UserInfo();
-        userInfo.setAge(35);
+        userInfo.setAge(30);
 
         Map<Long, UserInfo> map = userInfoApi.findByIds(ids, userInfo);
 

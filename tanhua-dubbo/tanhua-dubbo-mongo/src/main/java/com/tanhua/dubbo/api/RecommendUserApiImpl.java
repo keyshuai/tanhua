@@ -28,7 +28,14 @@ public class RecommendUserApiImpl implements RecommendUserApi{
 
     @Override
     public PageResult queryRecommendUserList(Integer page, Integer pagesize, Long toUserId) {
-        return null;
+        //构建Criteria对象
+        Criteria criteria = Criteria.where("toUserId").is(toUserId);
+        Query query = Query.query(criteria).with(Sort.by(Sort.Order.desc("score"))).limit(pagesize)
+                .skip((page-1)*pagesize);
+        //调用mongoTemplate查询
+        List<RecommendUser> list = mongoTemplate.find(query, RecommendUser.class);
+        long count = mongoTemplate.count(query, RecommendUser.class);
+        return new PageResult(page,pagesize,count,list);
     }
 
     @Override

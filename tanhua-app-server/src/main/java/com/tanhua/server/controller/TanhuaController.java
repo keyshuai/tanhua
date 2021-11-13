@@ -1,5 +1,7 @@
 package com.tanhua.server.controller;
 
+import com.tanhua.model.dto.RecommendUserDto;
+import com.tanhua.model.vo.PageResult;
 import com.tanhua.model.vo.TodayBest;
 import com.tanhua.server.service.TanhuaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,5 +20,10 @@ public class TanhuaController {
     public ResponseEntity todayBest(){
         TodayBest vo=tanhuaService.todayBest();
         return ResponseEntity.ok(vo);
+    }
+    @GetMapping("/recommendation")
+    public ResponseEntity personalInfo(RecommendUserDto dto){
+        PageResult pr=tanhuaService.recommendation(dto);
+        return ResponseEntity.ok("");
     }
 }

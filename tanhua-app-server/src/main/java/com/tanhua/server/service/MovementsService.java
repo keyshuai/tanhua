@@ -12,6 +12,7 @@ import com.tanhua.model.vo.MovementsVo;
 import com.tanhua.model.vo.PageResult;
 import com.tanhua.server.exception.BusinessException;
 import com.tanhua.server.interceptor.UserHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class MovementsService {
 
     @Autowired
@@ -36,11 +38,11 @@ public class MovementsService {
     private UserInfoApi userInfoApi;
 
     @Autowired
-    private RedisTemplate<String,String>redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
 
     public void publishMovement(Movement movement, MultipartFile[] imageContent) throws IOException {
         //判断发布动态内容是否存在
-        if (StringUtils.isEmpty(movement.getTextContent())){
+        if (StringUtils.isEmpty(movement.getTextContent())) {
             throw new BusinessException(ErrorResult.contentError());
         }
         Long userId = UserHolder.getUserId();
@@ -64,7 +66,7 @@ public class MovementsService {
         PageResult pr = movementApi.findByUserId(userId, page, pageSize);
         //获取PageResult中的item列表对象
         List<Movement> items = (List<Movement>) pr.getItems();
-        if (items==null){
+        if (items == null) {
             return pr;
         }
         //循环数据列表
@@ -78,17 +80,18 @@ public class MovementsService {
         pr.setItems(vos);
         return pr;
     }
+
     //好友动态
-    public PageResult findFriendMovements(Integer page,Integer pagesize) {
+    public PageResult findFriendMovements(Integer page, Integer pagesize) {
         Long userId = UserHolder.getUserId();
-        List<Movement> list = movementApi.findFriendMovements(page,pagesize,userId);
+        List<Movement> list = movementApi.findFriendMovements(page, pagesize, userId);
         return getPageResult(page, pagesize, list);
     }
 
     //公共方法
     private PageResult getPageResult(Integer page, Integer pagesize, List<Movement> list) {
         //非空判断
-        if (CollUtil.isEmpty(list)){
+        if (CollUtil.isEmpty(list)) {
             return new PageResult();
         }
         //获取好友的用户id
@@ -99,13 +102,13 @@ public class MovementsService {
         List<MovementsVo> vos = new ArrayList<>();
         for (Movement movement : list) {
             UserInfo userInfo = userMaps.get(movement.getUserId());
-            if (userInfo!=null){
+            if (userInfo != null) {
                 MovementsVo v = MovementsVo.init(userInfo, movement);
                 vos.add(v);
             }
         }
         //构造pageResult并返回
-        return new PageResult(page,pagesize,0L,vos);
+        return new PageResult(page, pagesize, 0L, vos);
     }
 
     //查询推荐动态
@@ -114,24 +117,33 @@ public class MovementsService {
         String redisKey = Constants.MOVEMENTS_RECOMMEND + UserHolder.getUserId();
         String redisValue = redisTemplate.opsForValue().get(redisKey);
         //判断推荐数据是否存在
-        List<Movement>list = Collections.EMPTY_LIST;
-        if (StringUtils.isEmpty(redisValue)){
+        List<Movement> list = Collections.EMPTY_LIST;
+        if (StringUtils.isEmpty(redisValue)) {
             //如果不存在,调用Api随机构造10条动态数据
-            list=movementApi.randomMovements(pagesize);
+            list = movementApi.randomMovements(pagesize);
 
-        }else {
+        } else {
             String[] values = redisValue.split(",");
             //判断当前页面的起始条数是否小于数组总数
-            if ((page - 1)*pagesize < values.length){
-                List<Long>pids =Arrays.stream(values).skip((page-1)*pagesize).limit(pagesize)
-                        .map(e->Long.valueOf(e))
+            if ((page - 1) * pagesize < values.length) {
+                List<Long> pids = Arrays.stream(values).skip((page - 1) * pagesize).limit(pagesize)
+                        .map(e -> Long.valueOf(e))
                         .collect(Collectors.toList());
                 //调用api根据PID数组查询动态数据
-                list=movementApi.findMovementsByPids(pids);
+                list = movementApi.findMovementsByPids(pids);
             }
         }
-        return getPageResult(page,pagesize,list);
+        return getPageResult(page, pagesize, list);
 
     }
 
+    public MovementsVo findMovementById(String movementId) {
+        Movement movement = movementApi.findById(movementId);
+        if (movement != null) {
+            UserInfo userInfo = userInfoApi.findById(movement.getUserId());
+            return MovementsVo.init(userInfo, movement);
+        } else {
+            return null;
+        }
+    }
 }

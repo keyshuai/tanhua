@@ -88,7 +88,7 @@ public class MovementApiImpl implements MovementApi{
 
     @Override
     public Movement findById(String movementId) {
-        return null;
+        return mongoTemplate.findById(movementId,Movement.class);
     }
 
     @Override

@@ -104,6 +104,16 @@ public class MovementsService {
             UserInfo userInfo = userMaps.get(movement.getUserId());
             if (userInfo != null) {
                 MovementsVo v = MovementsVo.init(userInfo, movement);
+                //修复点赞状态的bug 判断hashKey是否存在
+                String key=Constants.MOVEMENTS_INTERACT_KEY+movement.getId().toHexString();
+                String hashKey=Constants.MOVEMENT_LIKE_HASHKEY+UserHolder.getUserId();
+                if (redisTemplate.opsForHash().hasKey(key, hashKey)) {
+                    v.setHasLiked(1);
+                }
+                String lovehashKey=Constants.MOVEMENT_LOVE_HASHKEY+UserHolder.getUserId();
+                if (redisTemplate.opsForHash().hasKey(key, lovehashKey)) {
+                    v.setHasLoved(1);
+                }
                 vos.add(v);
             }
         }

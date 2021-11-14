@@ -36,7 +36,7 @@ public class CommentApiImpl implements CommentApi {
         }
         //保存到数据库
         mongoTemplate.save(comment);
-        //更新动态列表中的字段
+        //更新动态列表中的字段 --------------和取消一样
         Query query=Query.query(Criteria.where("id").is(comment.getPublishId()));
         Update update = new Update();
         if (comment.getCommentType()==CommentType.LIKE.getType()){
@@ -64,14 +64,42 @@ public class CommentApiImpl implements CommentApi {
         //查询并返回
         return mongoTemplate.find(query,Comment.class);
     }
-
+    //判断comment是否存在
     @Override
-    public Boolean hasComment(String movementId, Long userId, CommentType like) {
-        return null;
+    public Boolean hasComment(String movementId, Long userId, CommentType commentType) {
+        Criteria criteria = Criteria.where("userId").is(userId)
+                .and("publishId").is(new ObjectId(movementId))
+                .and("commentType").is(commentType.getType());
+        Query query=Query.query(criteria);
+        return mongoTemplate.exists(query,Comment.class);
     }
 
     @Override
     public Integer delete(Comment comment) {
-        return null;
+        //删除点赞
+        Criteria criteria = Criteria.where("userId").is(comment.getUserId())
+                .and("publishId").is(comment.getPublishId())
+                .and("commentType").is(comment.getCommentType());
+        Query query=Query.query(criteria);
+        mongoTemplate.remove(query,Comment.class);
+        //更新动态列表中的字段 --------------和新增一样
+        Query movementQuery = Query.query(Criteria.where("id").is(comment.getPublishId()));
+        Update update = new Update();
+        if (comment.getCommentType()==CommentType.LIKE.getType()){
+            update.inc("likeCount",-1);
+        }else if (comment.getCommentType()==CommentType.COMMENT.getType()){
+            update.inc("commentCount",-1);
+        }else {
+            update.inc("loveCount",-1);
+        }
+        //设置更新参数
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);//获取最后的更新字段
+        Movement modify = mongoTemplate.findAndModify(movementQuery, update, options, Movement.class);
+        //获取最新的评论数量,并返回
+        return modify.statisCount(comment.getCommentType());
+
     }
+
+
 }

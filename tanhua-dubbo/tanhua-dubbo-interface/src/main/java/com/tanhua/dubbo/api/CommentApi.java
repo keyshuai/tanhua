@@ -18,4 +18,5 @@ public interface CommentApi {
 
     //删除comment数据
     Integer delete(Comment comment);
+
 }

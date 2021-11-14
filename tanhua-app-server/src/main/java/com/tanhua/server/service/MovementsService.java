@@ -1,6 +1,8 @@
 package com.tanhua.server.service;
 
+import cn.hutool.core.collection.CollUtil;
 import com.tanhua.autoconfig.template.OssTemplate;
+import com.tanhua.commons.utils.Constants;
 import com.tanhua.dubbo.api.MovementApi;
 import com.tanhua.dubbo.api.UserInfoApi;
 import com.tanhua.model.domain.UserInfo;
@@ -18,8 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MovementsService {
@@ -76,4 +78,60 @@ public class MovementsService {
         pr.setItems(vos);
         return pr;
     }
+    //好友动态
+    public PageResult findFriendMovements(Integer page,Integer pagesize) {
+        Long userId = UserHolder.getUserId();
+        List<Movement> list = movementApi.findFriendMovements(page,pagesize,userId);
+        return getPageResult(page, pagesize, list);
+    }
+
+    //公共方法
+    private PageResult getPageResult(Integer page, Integer pagesize, List<Movement> list) {
+        //非空判断
+        if (CollUtil.isEmpty(list)){
+            return new PageResult();
+        }
+        //获取好友的用户id
+        List<Long> userIds = CollUtil.getFieldValues(list, "userId", Long.class);
+        //根据id查询用户详情
+        Map<Long, UserInfo> userMaps = userInfoApi.findByIds(userIds, null);
+        //一个movement构造一个vo对象
+        List<MovementsVo> vos = new ArrayList<>();
+        for (Movement movement : list) {
+            UserInfo userInfo = userMaps.get(movement.getUserId());
+            if (userInfo!=null){
+                MovementsVo v = MovementsVo.init(userInfo, movement);
+                vos.add(v);
+            }
+        }
+        //构造pageResult并返回
+        return new PageResult(page,pagesize,0L,vos);
+    }
+
+    //查询推荐动态
+    public PageResult findRecommendMovement(Integer page, Integer pagesize) {
+        //从redis中获取推荐数据
+        String redisKey = Constants.MOVEMENTS_RECOMMEND + UserHolder.getUserId();
+        String redisValue = redisTemplate.opsForValue().get(redisKey);
+        //判断推荐数据是否存在
+        List<Movement>list = Collections.EMPTY_LIST;
+        if (StringUtils.isEmpty(redisValue)){
+            //如果不存在,调用Api随机构造10条动态数据
+            list=movementApi.randomMovements(pagesize);
+
+        }else {
+            String[] values = redisValue.split(",");
+            //判断当前页面的起始条数是否小于数组总数
+            if ((page - 1)*pagesize < values.length){
+                List<Long>pids =Arrays.stream(values).skip((page-1)*pagesize).limit(pagesize)
+                        .map(e->Long.valueOf(e))
+                        .collect(Collectors.toList());
+                //调用api根据PID数组查询动态数据
+                list=movementApi.findMovementsByPids(pids);
+            }
+        }
+        return getPageResult(page,pagesize,list);
+
+    }
+
 }

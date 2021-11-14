@@ -27,11 +27,7 @@ public class TimeLineService {
         Criteria criteria = Criteria.where("userId").is(userId);
         Query query = Query.query(criteria);
         List<Friend> friends = mongoTemplate.find(query, Friend.class);
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
         //循环好友数据,构建时间存入数据库
         for (Friend friend : friends) {
             MovementTimeLine timeLine = new MovementTimeLine();

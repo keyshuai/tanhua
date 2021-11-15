@@ -40,7 +40,18 @@ public class RecommendUserApiImpl implements RecommendUserApi{
 
     @Override
     public RecommendUser queryByUserId(Long userId, Long userId1) {
-        return null;
+        Criteria criteria = Criteria.where("toUserId").is(userId1).and("userId").is(userId);
+        Query query=new Query(criteria);
+        RecommendUser user = mongoTemplate.findOne(query, RecommendUser.class);
+        if (user==null){
+            user=new RecommendUser();
+            user.setUserId(userId);
+            user.setToUserId(userId1);
+            //构建虚假缘分值
+            user.setScore(95d);
+
+        }
+        return user;
     }
 
     @Override

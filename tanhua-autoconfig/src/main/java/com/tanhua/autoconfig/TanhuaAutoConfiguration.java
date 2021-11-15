@@ -2,6 +2,7 @@ package com.tanhua.autoconfig;
 
 import com.tanhua.autoconfig.properties.*;
 import com.tanhua.autoconfig.template.AipFaceTemplate;
+import com.tanhua.autoconfig.template.HuanXinTemplate;
 import com.tanhua.autoconfig.template.OssTemplate;
 import com.tanhua.autoconfig.template.SmsTemplate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,5 +31,10 @@ public class TanhuaAutoConfiguration {
     @Bean
     public AipFaceTemplate aipFaceTemplate(AipFaceProperties properties){
         return new AipFaceTemplate();
+    }
+    //环信 通信
+    @Bean
+    public HuanXinTemplate huanXinTemplate(HuanXinProperties properties){
+        return new HuanXinTemplate(properties);
     }
 }

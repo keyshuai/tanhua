@@ -37,6 +37,8 @@ public class UserApilmpl implements UserApi{
 
     @Override
     public User findByHuanxin(String huanxinId) {
-        return null;
+        QueryWrapper<User> qw=new QueryWrapper<>();
+        qw.eq("hx_user",huanxinId);
+        return userMapper.selectOne(qw);
     }
 }

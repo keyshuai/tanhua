@@ -27,12 +27,12 @@ public class UserApilmpl implements UserApi{
 
     @Override
     public void update(User user) {
-
+        userMapper.updateById(user);
     }
 
     @Override
     public User findById(Long userId) {
-        return null;
+        return userMapper.selectById(userId);
     }
 
     @Override

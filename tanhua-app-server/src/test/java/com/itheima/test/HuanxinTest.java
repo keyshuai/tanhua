@@ -24,7 +24,7 @@ public class HuanxinTest {
 
     @Test
     public void testCreateUser() {
-        template.createUser("106", "123456");
+        template.createUser("hx1", "123456");
     }
 
     /*

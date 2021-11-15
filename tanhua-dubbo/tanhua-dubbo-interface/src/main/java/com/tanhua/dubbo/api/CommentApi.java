@@ -2,6 +2,7 @@ package com.tanhua.dubbo.api;
 
 import com.tanhua.model.enums.CommentType;
 import com.tanhua.model.mongo.Comment;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 
@@ -19,4 +20,12 @@ public interface CommentApi {
     //删除comment数据
     Integer delete(Comment comment);
 
+
+    //判断评论点赞
+    Integer hasCommentShuai(Comment comment);
+
+
+    Comment findById(ObjectId objectId);
+    //删除评论点赞
+    Integer displlike(Comment comment);
 }

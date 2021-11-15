@@ -1,5 +1,7 @@
 package com.tanhua.dubbo.api;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.nacos.api.config.filter.IFilterConfig;
 import com.tanhua.model.enums.CommentType;
 import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Movement;
@@ -99,6 +101,51 @@ public class CommentApiImpl implements CommentApi {
         //获取最新的评论数量,并返回
         return modify.statisCount(comment.getCommentType());
 
+    }
+
+    @Override
+    public Integer hasCommentShuai(Comment comment) {
+        Comment c = mongoTemplate.findById(comment.getPublishId(), Comment.class);
+
+        if (ObjectUtil.isAllEmpty(c)){
+            throw new RuntimeException("评论的数据不存在");
+        }
+
+        comment.setPublishUserId(c.getPublishUserId());
+        mongoTemplate.save(comment);
+        //更新字段
+        Query query=Query.query(Criteria.where("id").is(comment.getPublishId()));
+        Update update=new Update();
+        update.inc("likeCount",1);
+
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);
+        Comment modify = mongoTemplate.findAndModify(query, update, options, Comment.class);
+
+        return modify.getLikeCount();
+    }
+
+    @Override
+    public Comment findById(ObjectId objectId) {
+        return mongoTemplate.findById(objectId,Comment.class);
+    }
+
+    @Override
+    public Integer displlike(Comment comment) {
+        Criteria criteria = Criteria.where("userId").is(comment.getUserId())
+                .and("publishId").is(comment.getPublishId())
+                .and("commentType").is(comment.getCommentType());
+        Query query = Query.query(criteria);
+        mongoTemplate.remove(query,Comment.class);
+        //删除字段中的列表
+        Query id = Query.query(Criteria.where("id").is(comment.getPublishId()));
+        Update update = new Update();
+        update.inc("likeCount",-1);
+        //设置更新参数
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);
+        Comment andModify = mongoTemplate.findAndModify(id, update, options, Comment.class);
+        return andModify.getLikeCount();
     }
 
 

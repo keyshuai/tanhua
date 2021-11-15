@@ -1,6 +1,7 @@
 package com.tanhua.server.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.tanhua.commons.utils.Constants;
 import com.tanhua.dubbo.api.CommentApi;
 import com.tanhua.dubbo.api.UserInfoApi;
@@ -154,5 +155,54 @@ public class CommentService {
         String hashKey = Constants.MOVEMENT_LOVE_HASHKEY + UserHolder.getUserId();
         redisTemplate.opsForHash().delete(key,hashKey);
         return count;
+    }
+    //评论点赞
+    public Integer pllike(String movementId) {
+        Boolean hasComment = commentApi.hasComment(movementId, UserHolder.getUserId(), CommentType.LIKE);
+        if (hasComment){
+            throw new BusinessException(ErrorResult.likeError());
+        }
+        //调用api
+        Comment comment = new Comment();
+        comment.setUserId(UserHolder.getUserId());//评论人
+        comment.setPublishId(new ObjectId(movementId));//动态id
+        comment.setLikeCount(CommentType.LIKE.getType());//点赞
+        comment.setLikeCount(0);//当前评论点赞数
+        comment.setCreated(System.currentTimeMillis());//发表时间
+//        comment.setPublishUserId();
+//        comment.setCommentType();
+
+        Integer count = commentApi.hasCommentShuai(comment);
+        Comment byId = commentApi.findById(new ObjectId(movementId));
+
+        if (ObjectUtil.isEmpty(byId)){
+            throw new BusinessException(ErrorResult.likeError());
+        }
+        //4、拼接redis的key，将用户的点赞状态存入redis
+        String key = Constants.LIKE_COUNT + movementId;
+        String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+        redisTemplate.opsForHash().put(key,hashKey,"1");
+        return count;
+
+
+    }
+
+    public Integer displlike(String movementId) {
+        //调用api 查询是否点赞
+        Boolean hasComment = commentApi.hasComment(movementId, UserHolder.getUserId(), CommentType.LIKE);
+        if (!hasComment){
+            Comment comment = new Comment();
+            comment.setUserId(UserHolder.getUserId());//评论人
+            comment.setPublishId(new ObjectId(movementId));//动态id
+            comment.setLikeCount(CommentType.LIKE.getType());//点赞
+            Integer count=commentApi.displlike(comment);
+            //拼接 删除redis里面的点赞状态
+            String key = Constants.LIKE_COUNT + movementId;
+            String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+            redisTemplate.opsForHash().delete(key,hashKey);
+            return count;
+
+        }
+        throw new BusinessException(ErrorResult.disLikeError());
     }
 }

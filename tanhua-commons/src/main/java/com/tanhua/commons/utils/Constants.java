@@ -38,4 +38,7 @@ public class Constants {
     public static final String USER_NOT_LIKE_KEY = "USER_NOT_LIKE_SET_";
     //关注用户的key
     public static final String FOCUS_USER_KEY = "FOCUS_USER_KEY_";
+    //评论点赞
+    //关注用户的key
+    public static final String LIKE_COUNT = "COMMENT_LIKECOUNT_";
 }

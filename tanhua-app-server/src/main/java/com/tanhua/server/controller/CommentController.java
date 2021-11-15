@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("comments")
+@RequestMapping("/comments")
 public class CommentController {
 
     @Autowired
@@ -32,5 +32,17 @@ public class CommentController {
         PageResult p=commentService.findComments(movementId,page,pagesize);
         return ResponseEntity.ok(p);
 
+    }
+    //评论点赞
+    @GetMapping("/{id}/like")
+    public ResponseEntity like(@PathVariable("id") String movementId){
+        Integer like=commentService.pllike(movementId);
+        return ResponseEntity.ok(like);
+    }
+
+    @GetMapping("/{id}/dislike")
+    public ResponseEntity dislike(@PathVariable("id") String movementId){
+        Integer like=commentService.displlike(movementId);
+        return ResponseEntity.ok(like);
     }
 }

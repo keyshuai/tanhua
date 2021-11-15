@@ -13,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/tanhua")
 public class TanhuaController {
+
     @Autowired
     private TanhuaService tanhuaService;
 

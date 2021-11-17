@@ -1,5 +1,6 @@
 package com.tanhua.dubbo.api;
 
+import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Friend;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,5 +47,15 @@ public class FriendApiImpl implements FriendApi{
         Criteria criteria = Criteria.where("userId").is(userId);
         Query query = Query.query(criteria).skip((page - 1) * pagesize).limit(pagesize).with(Sort.by(Sort.Order.desc("created")));
         return mongoTemplate.find(query,Friend.class);
+    }
+
+    @Override
+    public List<Comment> like(Long userId, Integer page, Integer pagesize) {
+        //根据id查询publ
+        Criteria criteria = Criteria.where("userId").is(userId);
+        Query query = Query.query(criteria).skip((page - 1) * pagesize).limit(pagesize);
+        List<Comment> list = mongoTemplate.find(query, Comment.class);
+
+        return list;
     }
 }

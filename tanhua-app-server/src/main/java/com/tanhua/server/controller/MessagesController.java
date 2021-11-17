@@ -18,6 +18,7 @@ public class MessagesController {
 
     @Autowired
     private MessagesService messagesService;
+
     @GetMapping("/userinfo")
     //JSON格式
     public ResponseEntity userinfo(String huanxinId){
@@ -32,12 +33,20 @@ public class MessagesController {
         return ResponseEntity.ok(null);
 
     }
-
+    //分页显示好用吧
     @GetMapping("/contacts")
     public ResponseEntity contacts(@RequestParam(defaultValue = "1")Integer page,
                                    @RequestParam(defaultValue = "10")Integer pagesize,
                                    String keyword){
         PageResult pr=messagesService.findFriends(page,pagesize,keyword);
         return ResponseEntity.ok(pr);
+    }
+    //评论点赞查询
+    @GetMapping("/likes")
+    public ResponseEntity like(@RequestParam(defaultValue = "1")Integer page,
+                               @RequestParam(defaultValue = "10")Integer pagesize){
+        PageResult pr=messagesService.like(page,pagesize);
+        return ResponseEntity.ok(pr);
+
     }
 }

@@ -1,6 +1,7 @@
 package com.tanhua.server.controller;
 
 import com.tanhua.model.dto.RecommendUserDto;
+import com.tanhua.model.vo.NearUserVo;
 import com.tanhua.model.vo.PageResult;
 import com.tanhua.model.vo.TodayBest;
 import com.tanhua.server.service.TanhuaService;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -48,5 +50,30 @@ public class TanhuaController {
         String reply = (String) map.get("reply");
         tanhuaService.replyQuestions(userId,reply);
         return ResponseEntity.ok("null");
+    }
+    //推荐用户列表
+    @GetMapping("/cards")
+    public ResponseEntity cards(){
+        List<TodayBest> list=this.tanhuaService.cards();
+        return ResponseEntity.ok(list);
+    }
+    //喜欢
+    @GetMapping("{id}/love")
+    public ResponseEntity<Void> likeUser(@PathVariable("id")Long likeUserId){
+        this.tanhuaService.likeUser(likeUserId);
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("{id}/unlove")
+    public ResponseEntity<Void> notLikeUser(@PathVariable("id")Long likeUserId){
+        this.tanhuaService.notLikeUser(likeUserId);
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity queryNearUser(String gender,
+                                        @RequestParam(defaultValue = "2000")String distance){
+        List<NearUserVo> list=tanhuaService.queryNearUser(gender,distance);
+        return ResponseEntity.ok(list);
     }
 }

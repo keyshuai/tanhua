@@ -9,11 +9,13 @@ import com.tanhua.dubbo.api.UserApi;
 import com.tanhua.dubbo.api.UserInfoApi;
 import com.tanhua.model.domain.User;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Friend;
 import com.tanhua.model.vo.*;
 import com.tanhua.server.exception.BusinessException;
 import com.tanhua.server.interceptor.UserHolder;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,7 +38,7 @@ public class MessagesService {
 
     @Autowired
     private HuanXinTemplate huanXinTemplate;
-
+    //用户
     public UserInfoVo findUserInfoHuanxin(String huanxinId) {
         User user = userApi.findByHuanxin(huanxinId);
         UserInfo userinfo = userInfoApi.findById(user.getId());
@@ -59,6 +61,7 @@ public class MessagesService {
         //注册成功记录好友关系到mongodb
         friendApi.save(UserHolder.getUserId(),userId);
     }
+
     //分页查询联系人方法
     public PageResult findFriends(Integer page, Integer pagesize, String keyword) {
     //调用api查询当前用户的好友数据
@@ -81,6 +84,36 @@ public class MessagesService {
                 vos.add(vo);
             }
         }
+        return new PageResult(page,pagesize,0L,vos);
+    }
+
+    //评论点赞查询
+    public PageResult like(Integer page, Integer pagesize) {
+        Long user = UserHolder.getUserId();
+
+        List <Comment> list=friendApi.like(user,page,pagesize);
+        if (CollUtil.isEmpty(list)){
+            return new PageResult();
+        }
+
+        //提取数据列表好友
+        List<Long> userId = CollUtil.getFieldValues(list, "publishUserId", Long.class);
+        //调用UserInfoApi
+
+        UserInfo info = new UserInfo();
+        info.setNickname(UserHolder.getUserId().toString());
+        Map<Long, UserInfo> map = userInfoApi.findByIds(userId, info);
+        //构造vo对象
+        ArrayList<CommentVo> vos = new ArrayList<>();
+        for (Comment comment : list) {
+            UserInfo userInfo = map.get(comment.getPublishUserId());
+
+            if (userInfo!=null){
+                CommentVo vo = CommentVo.init(userInfo,comment);
+                vos.add(vo);
+            }
+        }
+
         return new PageResult(page,pagesize,0L,vos);
     }
 }

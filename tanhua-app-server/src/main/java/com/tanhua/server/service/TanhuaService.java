@@ -1,17 +1,18 @@
 package com.tanhua.server.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
 import com.tanhua.autoconfig.template.HuanXinTemplate;
 import com.tanhua.commons.utils.Constants;
-import com.tanhua.dubbo.api.QuestionApi;
-import com.tanhua.dubbo.api.RecommendUserApi;
-import com.tanhua.dubbo.api.UserInfoApi;
+import com.tanhua.dubbo.api.*;
 import com.tanhua.model.domain.Question;
 import com.tanhua.model.domain.UserInfo;
 import com.tanhua.model.dto.RecommendUserDto;
 import com.tanhua.model.mongo.RecommendUser;
 import com.tanhua.model.vo.ErrorResult;
+import com.tanhua.model.vo.NearUserVo;
 import com.tanhua.model.vo.PageResult;
 import com.tanhua.model.vo.TodayBest;
 import com.tanhua.server.exception.BusinessException;
@@ -19,6 +20,8 @@ import com.tanhua.server.interceptor.UserHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,8 +40,24 @@ public class TanhuaService {
     @DubboReference
     private QuestionApi questionApi;
 
+
+    @DubboReference
+    private UserLocationApi userLocationApi;
+
     @Autowired
     private HuanXinTemplate template;
+
+    @DubboReference
+    private UserLikeApi userLikeApi;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private MessagesService messagesService;
+
+//    @Value("${tanhua.default.recommend.class}")
+    private String recommendUser;
 
     //查询今日佳人的数据
     public TodayBest todayBest() {
@@ -121,4 +140,97 @@ public class TanhuaService {
 
 
     }
+
+    public List<TodayBest> cards() {
+        //调查推荐api查询数据列表
+        List<RecommendUser> users = recommendUserApi.queryCardsList(UserHolder.getUserId(), 10);
+        //判断是否存在,如果不存在,构造默认1,2,3
+        if (CollUtil.isEmpty(users)){
+            users =new ArrayList<>();
+            String[] userId = recommendUser.split(",");
+            for (String s : userId) {
+                RecommendUser recommendUser = new RecommendUser();
+                recommendUser.setUserId(Convert.toLong(s));
+                recommendUser.setToUserId(UserHolder.getUserId());
+                recommendUser.setScore(RandomUtil.randomDouble(60,90));
+                users.add(recommendUser);
+            }
+        }
+        //构造vo
+        List<Long> id = CollUtil.getFieldValues(users, "userId", Long.class);
+        Map<Long, UserInfo> map = userInfoApi.findByIds(id, null);
+
+        List<TodayBest> vos = new ArrayList<>();
+        for (RecommendUser user : users) {
+            UserInfo userInfo = map.get(user.getUserId());
+            if (userInfo!=null){
+                TodayBest vo = TodayBest.init(userInfo, user);
+                vos.add(vo);
+            }
+        }
+
+        return vos;
+    }
+
+    public void likeUser(Long likeUserId) {
+        //调用api 保存喜欢数据(保存到Mongodb服务器中)
+        Boolean save = userLikeApi.saveOrUpdate(UserHolder.getUserId(), likeUserId, true);
+        if (!save){
+            throw new BusinessException(ErrorResult.error());
+        }
+        redisTemplate.opsForSet().remove(Constants.USER_NOT_LIKE_KEY+UserHolder.getUserId(),likeUserId.toString());
+        redisTemplate.opsForSet().add(Constants.USER_LIKE_KEY+UserHolder.getUserId(),likeUserId.toString());
+        //判断是否双向喜欢
+        if (isLike(likeUserId,UserHolder.getUserId())){
+            //添加好友
+            messagesService.contacts(likeUserId);
+        }
+    }
+
+    public Boolean isLike(Long userId,Long likeUserId){
+        String key = Constants.USER_LIKE_KEY + userId;
+        return redisTemplate.opsForSet().isMember(key,likeUserId.toString());
+    }
+
+    public void notLikeUser(Long likeUserId) {
+        //调用api保存喜欢的数据
+        Boolean save = userLikeApi.saveOrUpdate(UserHolder.getUserId(), likeUserId, false);
+        if (!save){
+            //失败
+            throw new BusinessException(ErrorResult.noUser());
+        }
+        //操作redis 写入喜欢的数据,删除喜欢的数据
+        redisTemplate.opsForSet().add(Constants.USER_NOT_LIKE_KEY+UserHolder.getUserId(),likeUserId.toString());
+        redisTemplate.opsForSet().remove(Constants.USER_LIKE_KEY+UserHolder.getUserId(),likeUserId.toString());
+        //删除好友
+
+
+    }
+
+    public List<NearUserVo> queryNearUser(String gender, String distance) {
+        List<Long> userIds = userLocationApi.queryNearUser(UserHolder.getUserId(), Double.valueOf(distance));
+        //判断集合是否为空
+        if (CollUtil.isEmpty(userIds)){
+            return new ArrayList<>();
+        }
+        //调用userinfo根据用户id查询用户详情
+        UserInfo userInfo = new UserInfo();
+        userInfo.setGender(gender);
+        Map<Long, UserInfo> map = userInfoApi.findByIds(userIds, userInfo);
+        List<NearUserVo> vos = new ArrayList<>();
+        for (Long userId : userIds) {
+            //排除当前用户id
+            if (userId==UserHolder.getUserId()){
+                continue;
+            }
+            UserInfo info = map.get(userId);
+            if (info!=null){
+                NearUserVo v = NearUserVo.init(info);
+                vos.add(v);
+            }
+        }
+        return vos;
+
+    }
+
 }

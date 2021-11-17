@@ -53,4 +53,8 @@ public class ErrorResult {
     public static ErrorResult disloveError() {
         return ErrorResult.builder().errCode("000009").errMessage("用户未喜欢").build();
     }
+
+    public static ErrorResult noUser() {
+        return ErrorResult.builder().errCode("9999").errMessage("没有用户了").build();
+    }
 }

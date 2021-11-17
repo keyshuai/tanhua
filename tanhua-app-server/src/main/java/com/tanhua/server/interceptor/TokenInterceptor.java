@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 public class TokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        System.out.println(request+":request的请求"+response+":response响应");
         String token = request.getHeader("Authorization");
         boolean verifyToken = JwtUtils.verifyToken(token);
         if (!verifyToken){

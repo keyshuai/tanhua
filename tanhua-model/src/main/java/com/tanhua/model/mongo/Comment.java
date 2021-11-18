@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "comment")
 public class Comment implements java.io.Serializable{
     
-    private ObjectId id;
+    private ObjectId id; // 评论id
     private ObjectId publishId;    //动态id
     private Integer commentType;   //评论类型，1-点赞，2-评论，3-喜欢
     private String content;        //评论内容  

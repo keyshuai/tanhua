@@ -58,7 +58,7 @@ public class MovementsController {
         return ResponseEntity.ok(pr);
 
     }
-    //查询单挑动态
+    //查询单独动态
     @GetMapping("/{id}")
     public ResponseEntity findById(@PathVariable("id") String movementId) {
         MovementsVo vo = movementsService.findMovementById(movementId);

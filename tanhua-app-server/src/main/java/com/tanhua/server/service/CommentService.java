@@ -55,6 +55,16 @@ public class CommentService {
             UserInfo userInfo = map.get(comment.getUserId());
             if (userInfo!=null){
                 CommentVo vo = CommentVo.init(userInfo, comment);
+                //拼接redis的key,将用户点赞存入redis
+
+                String key = Constants.MOVEMENTS_INTERACT_KEY + comment.getId();
+                String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+ "_" +  comment.getId();
+
+                log.info("列表值:" + key + "...." + hashKey);
+
+                if (redisTemplate.opsForHash().hasKey(key,hashKey)){
+                    vo.setHasLiked(1);
+                }
                 commentVos.add(vo);
             }
         }
@@ -156,12 +166,17 @@ public class CommentService {
         redisTemplate.opsForHash().delete(key,hashKey);
         return count;
     }
+
     //评论点赞
     public Integer pllike(String movementId) {
-        Boolean hasComment = commentApi.hasComment(movementId, UserHolder.getUserId(), CommentType.LIKE);
-        if (hasComment){
+
+        String key1 = Constants.LIKE_COUNT + movementId;
+        String hashKey1 = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+        Boolean aBoolean = redisTemplate.opsForHash().hasKey(key1, hashKey1);
+        if (aBoolean){
             throw new BusinessException(ErrorResult.likeError());
         }
+
         //调用api
         Comment comment = new Comment();
         comment.setUserId(UserHolder.getUserId());//评论人
@@ -169,8 +184,6 @@ public class CommentService {
         comment.setLikeCount(CommentType.LIKE.getType());//点赞
         comment.setLikeCount(0);//当前评论点赞数
         comment.setCreated(System.currentTimeMillis());//发表时间
-//        comment.setPublishUserId();
-//        comment.setCommentType();
 
         Integer count = commentApi.hasCommentShuai(comment);
         Comment byId = commentApi.findById(new ObjectId(movementId));
@@ -179,8 +192,11 @@ public class CommentService {
             throw new BusinessException(ErrorResult.likeError());
         }
         //4、拼接redis的key，将用户的点赞状态存入redis
-        String key = Constants.LIKE_COUNT + movementId;
+        String key = Constants.MOVEMENTS_INTERACT_KEY + movementId;
         String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+
+        log.info("点赞值:" + key + "...." + hashKey);
+
         redisTemplate.opsForHash().put(key,hashKey,"1");
         return count;
 
@@ -188,6 +204,7 @@ public class CommentService {
     }
 
     public Integer displlike(String movementId) {
+
         //调用api 查询是否点赞
         Boolean hasComment = commentApi.hasComment(movementId, UserHolder.getUserId(), CommentType.LIKE);
         if (hasComment){
@@ -199,8 +216,11 @@ public class CommentService {
         comment.setLikeCount(CommentType.LIKE.getType());//点赞
         Integer count=commentApi.displlike(comment);
         //拼接 删除redis里面的点赞状态
-        String key = Constants.LIKE_COUNT + movementId;
+        String key = Constants.MOVEMENTS_INTERACT_KEY + movementId;
         String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+
+        log.info("取消点赞值:" + key + "...." + hashKey);
+
         redisTemplate.opsForHash().delete(key,hashKey);
         return count;
     }

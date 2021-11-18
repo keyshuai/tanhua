@@ -5,7 +5,11 @@ import com.tanhua.model.mongo.Video;
 import com.tanhua.model.vo.PageResult;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+
 
 import java.util.List;
 
@@ -30,12 +34,15 @@ public class VideoApiImpl implements VideoApi{
 
     @Override
     public List<Video> findMovementsByVids(List<Long> vids) {
-        return null;
+        Query query = Query.query(Criteria.where("vid").in(vids));
+        return mongoTemplate.find(query,Video.class);
     }
 
     @Override
     public List<Video> queryVideoList(int page, Integer pagesize) {
-        return null;
+        Query query = new Query().limit(pagesize).skip((page -1) * pagesize)
+                .with(Sort.by(Sort.Order.desc("created")));
+        return mongoTemplate.find(query,Video.class);
     }
 
     @Override

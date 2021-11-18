@@ -41,6 +41,8 @@ public class MessagesController {
         PageResult pr=messagesService.findFriends(page,pagesize,keyword);
         return ResponseEntity.ok(pr);
     }
+
+
     //评论点赞查询
     @GetMapping("/likes")
     public ResponseEntity like(@RequestParam(defaultValue = "1")Integer page,

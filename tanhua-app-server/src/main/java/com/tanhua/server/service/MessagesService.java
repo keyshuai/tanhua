@@ -97,7 +97,7 @@ public class MessagesService {
         }
 
         //提取数据列表好友
-        List<Long> userId = CollUtil.getFieldValues(list, "publishUserId", Long.class);
+        List<Long> userId = CollUtil.getFieldValues(list, "userId", Long.class);
         //调用UserInfoApi
 
         UserInfo info = new UserInfo();
@@ -116,4 +116,6 @@ public class MessagesService {
 
         return new PageResult(page,pagesize,0L,vos);
     }
+
+
 }

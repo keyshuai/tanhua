@@ -5,11 +5,14 @@ import com.tanhua.autoconfig.template.OssTemplate;
 import com.tanhua.commons.utils.Constants;
 import com.tanhua.dubbo.api.MovementApi;
 import com.tanhua.dubbo.api.UserInfoApi;
+import com.tanhua.dubbo.api.VisitorsApi;
 import com.tanhua.model.domain.UserInfo;
 import com.tanhua.model.mongo.Movement;
+import com.tanhua.model.mongo.Visitors;
 import com.tanhua.model.vo.ErrorResult;
 import com.tanhua.model.vo.MovementsVo;
 import com.tanhua.model.vo.PageResult;
+import com.tanhua.model.vo.VisitorsVo;
 import com.tanhua.server.exception.BusinessException;
 import com.tanhua.server.interceptor.UserHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,10 @@ public class MovementsService {
 
     @DubboReference
     private UserInfoApi userInfoApi;
+
+    @DubboReference
+    private VisitorsApi visitorsApi;
+
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -155,5 +162,33 @@ public class MovementsService {
         } else {
             return null;
         }
+    }
+
+    //首页访客列表
+    public List<VisitorsVo> visitors() {
+        //查询访客时间
+        String key = Constants.VISITORS_USER;
+        String hashKey = String.valueOf(UserHolder.getUserId());
+        String value = (String) redisTemplate.opsForHash().get(key, hashKey);
+        Long data = StringUtils.isEmpty(value) ? null : Long.valueOf(value);
+        //调用api查询数据列表
+        List<Visitors> list = visitorsApi.queryMyVisitors(data, UserHolder.getUserId());
+        if (CollUtil.isEmpty(list)){
+            return new ArrayList<>();
+        }
+        //提取用户id
+        List<Long> userId = CollUtil.getFieldValues(list, "visitorUserId", Long.class);
+        //查看用户详情
+        Map<Long, UserInfo> map = userInfoApi.findByIds(userId, null);
+        //构造返回
+        List<VisitorsVo> vos =new ArrayList<>();
+        for (Visitors visitors : list) {
+            UserInfo userInfo = map.get(visitors.getVisitorUserId());
+            if (userInfo!=null){
+                VisitorsVo vo = VisitorsVo.init(userInfo, visitors);
+                vos.add(vo);
+            }
+        }
+        return vos;
     }
 }

@@ -190,19 +190,18 @@ public class CommentService {
     public Integer displlike(String movementId) {
         //调用api 查询是否点赞
         Boolean hasComment = commentApi.hasComment(movementId, UserHolder.getUserId(), CommentType.LIKE);
-        if (!hasComment){
-            Comment comment = new Comment();
-            comment.setUserId(UserHolder.getUserId());//评论人
-            comment.setPublishId(new ObjectId(movementId));//动态id
-            comment.setLikeCount(CommentType.LIKE.getType());//点赞
-            Integer count=commentApi.displlike(comment);
-            //拼接 删除redis里面的点赞状态
-            String key = Constants.LIKE_COUNT + movementId;
-            String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
-            redisTemplate.opsForHash().delete(key,hashKey);
-            return count;
-
+        if (hasComment){
+            throw new BusinessException(ErrorResult.disLikeError());
         }
-        throw new BusinessException(ErrorResult.disLikeError());
+        Comment comment = new Comment();
+        comment.setUserId(UserHolder.getUserId());//评论人
+        comment.setPublishId(new ObjectId(movementId));//动态id
+        comment.setLikeCount(CommentType.LIKE.getType());//点赞
+        Integer count=commentApi.displlike(comment);
+        //拼接 删除redis里面的点赞状态
+        String key = Constants.LIKE_COUNT + movementId;
+        String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+movementId;
+        redisTemplate.opsForHash().delete(key,hashKey);
+        return count;
     }
 }

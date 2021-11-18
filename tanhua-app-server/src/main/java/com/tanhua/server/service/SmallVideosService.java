@@ -121,7 +121,11 @@ public class SmallVideosService {
 
     }
 
-    public void userUnFocus(String id) {
+    public void userUnFocus(Long id) {
+
+    }
+
+    public void userFocus(Long id) {
 
     }
 }

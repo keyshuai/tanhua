@@ -35,8 +35,19 @@ public class SmallVideoController {
         return ResponseEntity.ok(pr);
     }
 
+    //视频关注
+    @PostMapping("/{uid}/userFocus")
+    public ResponseEntity userFocus(@PathVariable("uid") Long id){
+        videosService.userFocus(id);
+        System.out.println(id);
+        return ResponseEntity.ok("null");
+    }
+
+
+
+    //视频取消关注
     @PostMapping("/{uid}/userUnFocus")
-    public ResponseEntity userUnFocus(@RequestParam("uid") String id){
+    public ResponseEntity userUnFocus(@PathVariable("uid") Long id){
         videosService.userUnFocus(id);
         return ResponseEntity.ok("null");
     }

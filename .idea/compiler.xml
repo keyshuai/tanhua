@@ -13,6 +13,8 @@
         <module name="tanhua-dubbo-db" />
         <module name="tanhua-dubbo-mongo" />
         <module name="tanhua-model" />
+        <module name="tanhua-gateway" />
+        <module name="tanhua-admin" />
         <module name="tanhua-app-server" />
       </profile>
     </annotationProcessing>
@@ -20,6 +22,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="tanhua" options="" />
+      <module name="tanhua-admin" options="-parameters" />
       <module name="tanhua-app-server" options="-parameters" />
       <module name="tanhua-autoconfig" options="-parameters" />
       <module name="tanhua-commons" options="-parameters" />
@@ -27,6 +30,7 @@
       <module name="tanhua-dubbo-db" options="-parameters" />
       <module name="tanhua-dubbo-interface" options="-parameters" />
       <module name="tanhua-dubbo-mongo" options="-parameters" />
+      <module name="tanhua-gateway" options="-parameters" />
       <module name="tanhua-model" options="-parameters" />
     </option>
   </component>

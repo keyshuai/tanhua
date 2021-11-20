@@ -19,6 +19,7 @@ import com.tanhua.server.interceptor.UserHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -79,6 +80,10 @@ public class SmallVideosService {
     }
 
     //查询视频列表
+//    @Cacheable(
+//            value = "videos",
+//            key ="T(com.tanhua.server.interceptor.UserHolder)"
+//    )
     public PageResult getSave(Integer page, Integer pagesize) {
         //查询redis数据
         String redisKey = Constants.VIDEOS_RECOMMEND + UserHolder.getUserId();

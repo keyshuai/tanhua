@@ -28,7 +28,7 @@ public class SmallVideoController {
         videosService.save(videoThumbnail,videoFile);
         return ResponseEntity.ok("上传成功");
     }
-
+    //查询视频列表
     @GetMapping
     public ResponseEntity saveVideo(@RequestParam(defaultValue = "1")Integer page,@RequestParam(defaultValue = "10")Integer pagesize){
         PageResult pr=videosService.getSave(page,pagesize);

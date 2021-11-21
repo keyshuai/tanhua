@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class MovementApiImpl implements MovementApi{
 
     //发布动态
     @Override
-    public void publish(Movement movement) {
+    public String publish(Movement movement) {
 
         try {
             //保存动态数据
@@ -46,12 +47,12 @@ public class MovementApiImpl implements MovementApi{
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        return movement.getId().toHexString();
     }
 
     @Override
     public PageResult findByUserId(Long userId, Integer page, Integer pagesize) {
-        Criteria criteria = Criteria.where("userId").is(userId);
+        Criteria criteria = Criteria.where("userId").is(userId).and("state").is(1);
         Query query = Query.query(criteria).skip((page - 1) * pagesize).limit(pagesize)
                 .with(Sort.by(Sort.Order.desc("created")));
         List<Movement> movements = mongoTemplate.find(query, Movement.class);
@@ -67,7 +68,7 @@ public class MovementApiImpl implements MovementApi{
         //提取动态id集合
         List<ObjectId> movementId = CollUtil.getFieldValues(lines, "movementId", ObjectId.class);
         //根据动态id查询动态详情
-        Query movementQuery = Query.query(Criteria.where("id").in(movementId));
+        Query movementQuery = Query.query(Criteria.where("id").in(movementId).and("state").is(1));
         return mongoTemplate.find(movementQuery,Movement.class);
     }
 
@@ -93,12 +94,25 @@ public class MovementApiImpl implements MovementApi{
 
     @Override
     public PageResult findByUserId(Long uid, Integer state, Integer page, Integer pagesize) {
-        return null;
+        Query query = new Query();
+        if (uid !=null){
+            query.addCriteria(Criteria.where("userId").is(uid));
+        }
+        if (state!=null){
+            query.addCriteria(Criteria.where("state").is(state));
+        }
+        long count = mongoTemplate.count(query, Movement.class);
+        query.limit(pagesize).skip((page-1)*pagesize).with(Sort.by(Sort.Order.desc("created")));
+        List<Movement> list = mongoTemplate.find(query, Movement.class);
+        return new PageResult(page,pagesize,count,list);
+
     }
 
     @Override
     public void update(String movementId, int state) {
-
+        Query query = Query.query(Criteria.where("id").is(new ObjectId(movementId)));
+        Update update=Update.update("state",state);
+        mongoTemplate.updateFirst(query,update,Movement.class);
     }
 
 

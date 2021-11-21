@@ -1,5 +1,6 @@
 package com.tanhua.dubbo.api;
 
+import com.tanhua.model.enums.CommentType;
 import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Friend;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -50,12 +51,11 @@ public class FriendApiImpl implements FriendApi{
     }
 
     @Override
-    public List<Comment> like(Long userId, Integer page, Integer pagesize) {
+    public List<Comment> like(Long userId, Integer page, Integer pagesize, CommentType like) {
         //根据id查询publ
-        Criteria criteria = Criteria.where("userId").is(userId);
+        Criteria criteria = Criteria.where("publishUserId").is(userId).and("commentType").is(like.getType());
         Query query = Query.query(criteria).skip((page - 1) * pagesize).limit(pagesize);
-        List<Comment> list = mongoTemplate.find(query, Comment.class);
 
-        return list;
+        return mongoTemplate.find(query, Comment.class);
     }
 }

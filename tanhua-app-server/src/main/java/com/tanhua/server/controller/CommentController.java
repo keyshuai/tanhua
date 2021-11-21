@@ -45,4 +45,6 @@ public class CommentController {
         Integer like=commentService.displlike(movementId);
         return ResponseEntity.ok(like);
     }
+
+
 }

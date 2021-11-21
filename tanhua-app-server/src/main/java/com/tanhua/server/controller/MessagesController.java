@@ -51,4 +51,18 @@ public class MessagesController {
         return ResponseEntity.ok(pr);
 
     }
+    //评论查询
+    @GetMapping("/comments")
+    public ResponseEntity comments(@RequestParam(defaultValue = "1")Integer page,
+                                   @RequestParam(defaultValue = "10")Integer pagesize){
+        PageResult pr=messagesService.comments(page,pagesize);
+        return ResponseEntity.ok(pr);
+    }
+
+    @GetMapping("/loves")
+    public ResponseEntity love(@RequestParam(defaultValue = "1")Integer page,
+                                   @RequestParam(defaultValue = "10")Integer pagesize){
+        PageResult pr=messagesService.love(page,pagesize);
+        return ResponseEntity.ok(pr);
+    }
 }

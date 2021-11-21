@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Log {
+public class Log extends BasePojo{
     private Long id;
     private Long userId;
     private String logTime;

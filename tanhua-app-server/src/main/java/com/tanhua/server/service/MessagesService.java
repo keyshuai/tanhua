@@ -9,11 +9,13 @@ import com.tanhua.dubbo.api.UserApi;
 import com.tanhua.dubbo.api.UserInfoApi;
 import com.tanhua.model.domain.User;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.enums.CommentType;
 import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Friend;
 import com.tanhua.model.vo.*;
 import com.tanhua.server.exception.BusinessException;
 import com.tanhua.server.interceptor.UserHolder;
+import lombok.extern.log4j.Log4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Log4j
 @Service
 public class MessagesService {
 
@@ -89,33 +92,51 @@ public class MessagesService {
 
     //评论点赞查询
     public PageResult like(Integer page, Integer pagesize) {
+        //用户id
         Long user = UserHolder.getUserId();
 
-        List <Comment> list=friendApi.like(user,page,pagesize);
-        if (CollUtil.isEmpty(list)){
-            return new PageResult();
-        }
+        List <Comment> list=friendApi.like(user,page,pagesize, CommentType.LIKE);
+        return getPageResult(page, pagesize, list);
+    }
+    //喜欢查询
+    public PageResult love(Integer page, Integer pagesize) {
+        Long user = UserHolder.getUserId();
 
-        //提取数据列表好友
-        List<Long> userId = CollUtil.getFieldValues(list, "userId", Long.class);
-        //调用UserInfoApi
+        List <Comment> list=friendApi.like(user,page,pagesize, CommentType.LOVE);
+        return getPageResult(page, pagesize, list);
+    }
+    //评论查询
+    public PageResult comments(Integer page, Integer pagesize) {
+        Long user = UserHolder.getUserId();
+        //查询动态
+        List <Comment> list=friendApi.like(user,page,pagesize, CommentType.COMMENT);
 
-        UserInfo info = new UserInfo();
-        info.setNickname(UserHolder.getUserId().toString());
-        Map<Long, UserInfo> map = userInfoApi.findByIds(userId, info);
-        //构造vo对象
-        ArrayList<CommentVo> vos = new ArrayList<>();
-        for (Comment comment : list) {
-            UserInfo userInfo = map.get(comment.getPublishUserId());
-
-            if (userInfo!=null){
-                CommentVo vo = CommentVo.init(userInfo,comment);
-                vos.add(vo);
-            }
-        }
-
-        return new PageResult(page,pagesize,0L,vos);
+        return getPageResult(page, pagesize, list);
     }
 
 
+
+    private PageResult getPageResult(Integer page, Integer pagesize, List<Comment> list) {
+
+        if (CollUtil.isEmpty(list)){
+            return new PageResult();
+        }
+        //提取数据列表
+        List<Long> userId = CollUtil.getFieldValues(list, "userId", Long.class);
+
+        log.info(userId);
+        //根据id获取用户详情
+        Map<Long, UserInfo> likes = userInfoApi.findLikes(userId);
+        //构建vo对象
+
+        List<CommentVo> vos=new ArrayList<>();
+        for (Comment comment : list) {
+            UserInfo userInfo = likes.get(comment.getPublishUserId());
+            if (userInfo!=null){
+                CommentVo vo = CommentVo.init(userInfo, comment);
+                vos.add(vo);
+            }
+        }
+        return new PageResult(page, pagesize,0L,vos);
+    }
 }

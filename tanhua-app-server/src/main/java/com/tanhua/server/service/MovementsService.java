@@ -18,6 +18,7 @@ import com.tanhua.server.interceptor.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -43,10 +44,12 @@ public class MovementsService {
     @DubboReference
     private VisitorsApi visitorsApi;
 
-
+    @Autowired
+    private AmqpTemplate amqpTemplate;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    //发布动态
     public void publishMovement(Movement movement, MultipartFile[] imageContent) throws IOException {
         //判断发布动态内容是否存在
         if (StringUtils.isEmpty(movement.getTextContent())) {
@@ -63,8 +66,9 @@ public class MovementsService {
         movement.setUserId(userId);//用户id
         movement.setMedias(medias);//媒地址内容
 
-        movementApi.publish(movement);
-
+        String publish = movementApi.publish(movement);
+        //发送动态审核消息
+        mqMessageService.sendAudiMessage(publish);
     }
 
     //查询个人动态
@@ -154,7 +158,13 @@ public class MovementsService {
 
     }
 
+    @Autowired
+    private MqMessageService mqMessageService;
+
+    //根据id查询动态
     public MovementsVo findMovementById(String movementId) {
+        mqMessageService.sendLogMessage(UserHolder.getUserId(),"0202","movement",movementId);
+
         Movement movement = movementApi.findById(movementId);
         if (movement != null) {
             UserInfo userInfo = userInfoApi.findById(movement.getUserId());

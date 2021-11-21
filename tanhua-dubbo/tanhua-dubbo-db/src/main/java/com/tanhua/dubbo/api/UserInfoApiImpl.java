@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tanhua.dubbo.mappers.UserInfoMapper;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.mongo.Comment;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,5 +57,18 @@ public class UserInfoApiImpl implements UserInfoApi{
     @Override
     public IPage findAll(Integer page, Integer pagesize) {
         return userInfoMapper.selectPage(new Page<UserInfo>(page,pagesize),null);
+    }
+
+    //查询 点赞 评论 喜欢列表
+    @Override
+    public Map<Long, UserInfo> findLikes(List<Long> userIds) {
+
+        QueryWrapper<UserInfo> wrapper = new QueryWrapper<>();
+        wrapper.in("id",userIds);
+        List<UserInfo> list = userInfoMapper.selectList(wrapper);
+
+        //通过hutool工具包,设置map集合键值对
+        Map<Long, UserInfo> map = CollUtil.fieldValueMap(list, "id");
+        return map;
     }
 }

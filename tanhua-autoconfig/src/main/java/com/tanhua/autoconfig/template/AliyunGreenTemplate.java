@@ -18,6 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
+/**
+ * @author: itheima
+ * @create: 2021-05-31 00:46
+ */
 @Slf4j
 public class AliyunGreenTemplate {
 
@@ -79,7 +83,7 @@ public class AliyunGreenTemplate {
         textScanRequest.setConnectTimeout(3000);
         textScanRequest.setReadTimeout(6000);
 
-        //返回结果内容
+//        返回结果内容
         Map<String, String> resultMap = new HashMap<>();
         try {
             HttpResponse httpResponse = client.doAction(textScanRequest);
@@ -133,6 +137,7 @@ public class AliyunGreenTemplate {
                         log.info("返回结果，resultMap={}", resultMap);
                         return resultMap;
                     }
+
                 }
             }
             resultMap.put("suggestion", "pass");
@@ -150,7 +155,7 @@ public class AliyunGreenTemplate {
     /**
      * 阿里云图片内容安全
      */
-    public Map<String, String> imageScan(List<String> imageList) throws Exception {
+    public Map imageScan(List<String> imageList) throws Exception {
         IClientProfile profile = DefaultProfile
                 .getProfile("cn-shanghai", greenProperties.getAccessKeyID(), greenProperties.getAccessKeySecret());
         ImageSyncScanRequest imageSyncScanRequest = new ImageSyncScanRequest();
@@ -191,7 +196,7 @@ public class AliyunGreenTemplate {
             list.add(task);
         }
 
-        httpBody.put("tasks", list);
+        httpBody.put("tasks",list);
 
         imageSyncScanRequest.setHttpContent(org.apache.commons.codec.binary.StringUtils.getBytesUtf8(httpBody.toJSONString()),
                 "UTF-8", FormatType.JSON);
@@ -239,6 +244,7 @@ public class AliyunGreenTemplate {
                                 return resultMap;
                             }
                         }
+
                     } else {
                         //单张图片处理失败, 原因视具体的情况详细分析
                         log.error("task process fail. task response:" + JSON.toJSONString(taskResult));

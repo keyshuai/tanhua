@@ -2,6 +2,7 @@ package com.tanhua.dubbo.api;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.mongo.Comment;
 
 import java.util.List;
 import java.util.Map;
@@ -23,4 +24,7 @@ public interface UserInfoApi {
 
     //分页查询
     IPage findAll(Integer page,Integer pagesize);
+
+
+    Map<Long, UserInfo> findLikes(List<Long> userIds);
 }

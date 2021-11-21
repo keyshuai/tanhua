@@ -11,7 +11,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Analysis{
+public class Analysis extends BasePojo{
 
     private Long id;
     /**

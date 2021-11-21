@@ -41,4 +41,5 @@ public class Constants {
     //评论点赞
     //关注用户的key
     public static final String LIKE_COUNT = "COMMENT_LIKECOUNT_";
+
 }

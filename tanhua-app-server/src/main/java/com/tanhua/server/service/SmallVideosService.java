@@ -69,7 +69,7 @@ public class SmallVideosService {
         video.setUserId(UserHolder.getUserId());
         video.setPicUrl(imageUrl);
         video.setVideoUrl(videoUrl);
-        video.setText("我啥时候 java能精通啊");
+        video.setText("你精通不了Java");
         //调用api保存数据
         String save = videoApi.save(video);
         if (StringUtils.isEmpty(save)) {

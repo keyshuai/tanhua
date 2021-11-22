@@ -1,6 +1,7 @@
 package com.tanhua.admin.service;
 
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -14,6 +15,13 @@ import java.util.Date;
 
 @Service
 public class AnalysisService {
+
+    /**
+     * 查询活跃用户的数量
+     */
+
+
+
 
     @Autowired
     private AnalysisMapper analysisMapper;
@@ -68,5 +76,10 @@ public class AnalysisService {
             analysis.setUpdated(new Date());
             analysisMapper.updateById(analysis);
         }
+    }
+
+
+    public Integer queryCumulativeUsers() {
+        return analysisMapper.queryCumulativeUsers();
     }
 }

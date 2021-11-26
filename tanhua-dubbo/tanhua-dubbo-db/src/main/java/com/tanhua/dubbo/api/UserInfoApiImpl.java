@@ -71,4 +71,20 @@ public class UserInfoApiImpl implements UserInfoApi{
         Map<Long, UserInfo> map = CollUtil.fieldValueMap(list, "id");
         return map;
     }
+
+    @Override
+    public List<UserInfo> find(List<Long> friendId) {
+        LambdaQueryWrapper<UserInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(UserInfo::getId,friendId);
+        return userInfoMapper.selectList(wrapper);
+    }
+
+    @Override
+    public List<UserInfo> likeUserId(List<Long> likeUserId) {
+        LambdaQueryWrapper<UserInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(UserInfo::getId,likeUserId);
+        return userInfoMapper.selectList(wrapper);
+    }
+
+
 }

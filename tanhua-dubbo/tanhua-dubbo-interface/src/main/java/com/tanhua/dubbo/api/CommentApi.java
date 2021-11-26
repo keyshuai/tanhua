@@ -28,4 +28,10 @@ public interface CommentApi {
     Comment findById(ObjectId objectId);
     //删除评论点赞
     Integer displlike(Comment comment);
+
+    Integer saves(Comment comment);
+
+    Integer videoSave(Comment comment);
+
+    Integer deleteVideo(Comment comment);
 }

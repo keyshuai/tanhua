@@ -18,4 +18,6 @@ public interface VideoApi {
 
     //根据用户id查询
     PageResult findByUserId(Integer page, Integer pagesize, Long userId);
+    //视频点赞
+    void like(Long id);
 }

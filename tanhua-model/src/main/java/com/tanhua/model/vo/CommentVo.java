@@ -32,7 +32,7 @@ public class CommentVo implements Serializable {
         BeanUtils.copyProperties(userInfo, vo);
         BeanUtils.copyProperties(item, vo);
         vo.setHasLiked(0);
-        Date date = new Date(item.getCreated());
+        Date date = new Date(item.getCreated());//时间
         vo.setCreateDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
         vo.setId(item.getId().toHexString());
         return vo;

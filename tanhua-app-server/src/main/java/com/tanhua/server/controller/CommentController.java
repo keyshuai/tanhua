@@ -39,7 +39,7 @@ public class CommentController {
         Integer like=commentService.pllike(movementId);
         return ResponseEntity.ok(like);
     }
-
+    //评论取消点赞
     @GetMapping("/{id}/dislike")
     public ResponseEntity dislike(@PathVariable("id") String movementId){
         Integer like=commentService.displlike(movementId);

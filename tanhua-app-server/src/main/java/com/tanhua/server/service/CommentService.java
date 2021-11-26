@@ -85,6 +85,24 @@ public class CommentService {
         log.info("commentCount="+commentCount);
 
     }
+
+    public void saves(String movementId, String comment) {
+        Long userId = UserHolder.getUserId();
+        //添加数据
+        Comment comment1 = new Comment();
+        comment1.setPublishId(new ObjectId(movementId));//动态id
+        comment1.setCommentType(CommentType.COMMENT.getType());//评论类型
+        comment1.setContent(comment);//评论内容
+        comment1.setUserId(userId);//评论用户
+        comment1.setCreated(System.currentTimeMillis());//时间
+        //调用Api保存评论
+        Integer commentCount = commentApi.videoSave(comment1);
+        log.info("commentCount="+commentCount);
+
+    }
+
+
+
     //动态点站
     public Integer likeComment(String movementId) {
         //查询是否点赞
@@ -223,5 +241,50 @@ public class CommentService {
 
         redisTemplate.opsForHash().delete(key,hashKey);
         return count;
+    }
+
+    public Integer commentsLike(String id) {
+        String key =Constants.LIKE_COUNT +id;
+        String hashKey=Constants.MOVEMENT_LIKE_HASHKEY +UserHolder.getUserId()+"_"+id;
+        Boolean aBoolean = redisTemplate.opsForHash().hasKey(key, hashKey);
+        if (!aBoolean){
+            throw new BusinessException(ErrorResult.error());
+        }
+        //调用api
+        Comment comment = new Comment();
+        comment.setUserId(UserHolder.getUserId());
+        comment.setPublishId(new ObjectId(id));
+        comment.setLikeCount(CommentType.LIKE.getType());
+        comment.setLikeCount(0);
+        comment.setCreated(System.currentTimeMillis());
+        Integer count = commentApi.hasCommentShuai(comment);
+        //查询是否点赞
+        Comment ids =commentApi.findById(new ObjectId(id));
+        if (ObjectUtil.isEmpty(ids)){
+            throw new BusinessException(ErrorResult.error());
+        }
+        String key1 =Constants.LIKE_COUNT +id;
+        String hashKey1=Constants.MOVEMENT_LIKE_HASHKEY +UserHolder.getUserId()+"_"+id;
+        redisTemplate.opsForHash().put(key1,hashKey1,"1");
+        return count;
+    }
+    //评论取消点赞
+    public Integer commentsdisLike(String id) {
+        Boolean hasComment = commentApi.hasComment(id, UserHolder.getUserId(), CommentType.LIKE);
+        if (hasComment){
+            throw new BusinessException(ErrorResult.error());
+        }
+        Comment comment = new Comment();
+        comment.setUserId(UserHolder.getUserId());//评论人
+        comment.setPublishId(new ObjectId(id));//动态id
+        comment.setLikeCount(CommentType.LIKE.getType());//点赞
+        Integer count=commentApi.displlike(comment);
+        //拼接 删除redis里面的点赞状态
+        String key = Constants.MOVEMENTS_INTERACT_KEY + id;
+        String hashKey = Constants.MOVEMENT_LIKE_HASHKEY + UserHolder.getUserId()+"_"+id;
+        log.info("取消点赞值:" + key + "...." + hashKey);
+        redisTemplate.opsForHash().delete(key,hashKey);
+        return count;
+
     }
 }

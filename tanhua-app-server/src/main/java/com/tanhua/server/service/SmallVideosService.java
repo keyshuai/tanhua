@@ -7,10 +7,14 @@ import com.github.tobato.fastdfs.domain.fdfs.StorePath;
 import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import com.tanhua.autoconfig.template.OssTemplate;
 import com.tanhua.commons.utils.Constants;
+import com.tanhua.dubbo.api.CommentApi;
 import com.tanhua.dubbo.api.UserInfoApi;
 import com.tanhua.dubbo.api.VideoApi;
 import com.tanhua.model.domain.UserInfo;
+import com.tanhua.model.enums.CommentType;
+import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Video;
+import com.tanhua.model.vo.CommentVo;
 import com.tanhua.model.vo.ErrorResult;
 import com.tanhua.model.vo.PageResult;
 import com.tanhua.model.vo.VideoVo;
@@ -18,10 +22,9 @@ import com.tanhua.server.exception.BusinessException;
 import com.tanhua.server.interceptor.UserHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,8 +52,14 @@ public class SmallVideosService {
     @DubboReference
     private UserInfoApi userInfoApi;
 
+    @DubboReference
+    private CommentApi commentApi;
+
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private MqMessageService mqMessageService;
 
     public void save(MultipartFile videoThumbnail, MultipartFile videoFile) throws IOException {
 
@@ -69,13 +78,14 @@ public class SmallVideosService {
         video.setUserId(UserHolder.getUserId());
         video.setPicUrl(imageUrl);
         video.setVideoUrl(videoUrl);
-        video.setText("你精通不了Java");
+        video.setText("我啥时候 java能精通啊");
         //调用api保存数据
         String save = videoApi.save(video);
         if (StringUtils.isEmpty(save)) {
             throw new BusinessException(ErrorResult.error());
         }
-
+        //发送消息
+        mqMessageService.sendLogMessage(UserHolder.getUserId(),"0301","video",save);
 
     }
 
@@ -125,12 +135,116 @@ public class SmallVideosService {
 
 
     }
-
-    public void userUnFocus(Long id) {
-
+    //视频取消关注
+    public Integer userUnFocus(String id) {
+        Long userId = UserHolder.getUserId();
+        //查询视频是关注
+        Boolean hasUnFocus =commentApi.hasComment(id,userId, CommentType.ATTENTION);
+        //如果以关注抛出异常
+        if (hasUnFocus){
+            throw new BusinessException(ErrorResult.error());
+        }
+        //调用API保存数据到mongdb
+        Comment comment=new Comment();
+        comment.setPublishId(new ObjectId(id));
+        comment.setCommentType(CommentType.ATTENTION.getType());
+        comment.setUserId(userId);
+        comment.setCreated(System.currentTimeMillis());
+        Integer count=commentApi.saves(comment);
+        //存入redis的key,将用户关注存入redis
+        String key=Constants.FOCUS_USER_KEY+id;
+        String hashKey=Constants.MOVEMENT_LOVE_HASHKEY+userId;
+        redisTemplate.opsForHash().put(key,hashKey,"1");
+        return count;
+    }
+    //视频关注
+    public Integer userFocus(String id) {
+//        Long userId = UserHolder.getUserId();
+//        //查询视频是关注
+//        Boolean hasUnFocus =commentApi.hasComment(id,userId, CommentType.ATTENTION);
+//        //如果以关注抛出异常
+//        if (hasUnFocus){
+//            throw new BusinessException(ErrorResult.error());
+//        }
+//        //调用API保存数据到mongdb
+//        Comment comment=new Comment();
+//        comment.setPublishId(new ObjectId(id));
+//        comment.setCommentType(CommentType.ATTENTION.getType());
+//        comment.setUserId(userId);
+//        comment.setCreated(System.currentTimeMillis());
+//        Integer count=commentApi.saves(comment);
+//        //存入redis的key,将用户关注存入redis
+//        String key=Constants.FOCUS_USER_KEY+id;
+//        String hashKey=Constants.MOVEMENT_LOVE_HASHKEY+userId;
+//        redisTemplate.opsForHash().put(key,hashKey,"1");
+//        return count;
+        return null;
     }
 
-    public void userFocus(Long id) {
 
+    public Integer like(String id) {
+        Long userId = UserHolder.getUserId();
+        Boolean hasComment = commentApi.hasComment(id, userId, CommentType.LIKES);
+        if (hasComment){
+            throw new BusinessException(ErrorResult.error());
+        }
+        Comment comment = new Comment();
+        comment.setPublishId(new ObjectId(id));
+        comment.setCommentType(CommentType.LIKES.getType());
+        comment.setUserId(userId);
+        comment.setCreated(System.currentTimeMillis());//时间
+        Integer count =commentApi.videoSave(comment);
+        String key = Constants.MOVEMENTS_INTERACT_KEY + id;
+        String hashKey=Constants.MOVEMENT_LIKE_HASHKEY +UserHolder.getUserId();
+        redisTemplate.opsForHash().put(key,hashKey,"1");
+        return count;
+    }
+
+    public Integer dislike(String id) {
+        Long userId = UserHolder.getUserId();
+        //查询是否点赞
+        Boolean hasComment = commentApi.hasComment(id, userId, CommentType.LIKES);
+        if (!hasComment){
+            throw new BusinessException(ErrorResult.error());
+        }
+        //调用api删除数据
+        Comment comment=new Comment();
+        comment.setPublishId(new ObjectId(id));
+        comment.setCommentType(CommentType.LIKES.getType());
+        comment.setUserId(userId);
+        Integer count=commentApi.deleteVideo(comment);
+        //拼接redis的key
+        String key = Constants.MOVEMENTS_INTERACT_KEY + id;
+        String hashKey=Constants.MOVEMENT_LIKE_HASHKEY +UserHolder.getUserId();
+        redisTemplate.opsForHash().delete(key,hashKey,"1");
+        return count;
+    }
+    //视频评论列表
+    public PageResult commentsFind(String id, Integer page, Integer pagesize) {
+        List<Comment> list = commentApi.findComments(id, CommentType.COMMENT, page, pagesize);
+        //判断List集合是否存在
+        if (CollUtil.isEmpty(list)){
+            return new PageResult();
+        }
+        //提取用户调用userinfoApi查询用户详情
+        List<Long> userId = CollUtil.getFieldValues(list, "userId", Long.class);
+        Map<Long, UserInfo> map = userInfoApi.findByIds(userId, null);
+        //构建vo对象
+        List<CommentVo> commentVos = new ArrayList<>();
+        for (Comment comment : list) {
+            UserInfo userInfo = map.get(comment.getUserId());
+            if (userInfo!=null){
+                CommentVo vo = CommentVo.init(userInfo, comment);
+                //拼接redis 的key 存入缓存
+                String key=Constants.MOVEMENTS_INTERACT_KEY+comment.getId();
+                String hasKey=Constants.MOVEMENT_LIKE_HASHKEY+UserHolder.getUserId();
+
+                if (redisTemplate.opsForHash().hasKey(key,hasKey)){
+                    vo.setHasLiked(1);
+                }
+                commentVos.add(vo);
+            }
+        }
+        return new PageResult(page,pagesize,0L,commentVos);
     }
 }

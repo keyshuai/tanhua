@@ -1,14 +1,18 @@
 package com.tanhua.dubbo.api;
 
 import com.tanhua.dubbo.utils.IdWorker;
+import com.tanhua.model.mongo.Comment;
 import com.tanhua.model.mongo.Video;
 import com.tanhua.model.vo.PageResult;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 
 import java.util.List;
@@ -21,6 +25,9 @@ public class VideoApiImpl implements VideoApi{
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @DubboReference
+    private VideoApi videoApi;
 
     @Override
     public String save(Video video) {
@@ -56,5 +63,19 @@ public class VideoApiImpl implements VideoApi{
         //数据列表
         List<Video> list = mongoTemplate.find(query, Video.class);
         return new PageResult(page,pagesize,count,list);
+    }
+
+    @Override
+    public void like(Long id) {
+        //设置被评论人属性
+        Query query=Query.query(Criteria.where("Id").is(id));
+        Update update=new Update();
+        update.inc("likeCount",1);
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);
+
+
+        Video modify = mongoTemplate.findAndModify(query, update, options, Video.class);
+
     }
 }

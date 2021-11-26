@@ -27,4 +27,9 @@ public interface UserInfoApi {
 
 
     Map<Long, UserInfo> findLikes(List<Long> userIds);
+
+
+    List<UserInfo> find(List<Long> friendId);
+
+    List<UserInfo> likeUserId(List<Long> likeUserId);
 }
